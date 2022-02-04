@@ -235,19 +235,17 @@ Int_t SBSScalerHelicityReader::ReadData( const THaEvData& evdata )
       return -1;
    }
 
-   UInt_t fadcdata[8];
-
    //  LHRS FADC helicity bits
-   fadcdata[0] = 0;
-   fadcdata[1] = evdata.GetData( Decoder::kPulseIntegral,10,14,15,0 );
-   fadcdata[2] = evdata.GetData( Decoder::kPulseIntegral,10,14,14,0 );
-   fadcdata[3] = evdata.GetData( Decoder::kPulseIntegral,10,14,13,0 );
+   fFADCSpare    = evdata.GetData( Decoder::kPulseIntegral,10,14,15,0 );
+   fFADCHelicity = evdata.GetData( Decoder::kPulseIntegral,10,14,14,0 );
+   fFADCPatSync  = evdata.GetData( Decoder::kPulseIntegral,10,14,13,0 );
+   fFADCTSettle  = evdata.GetData( Decoder::kPulseIntegral,10,14,12,0 );
 
    //  SBS FADC helicity bits
-   fadcdata[4] = evdata.GetData( Decoder::kPulseIntegral,1,20,15,0 );
-   fadcdata[5] = evdata.GetData( Decoder::kPulseIntegral,1,20,14,0 );
-   fadcdata[6] = evdata.GetData( Decoder::kPulseIntegral,1,20,13,0 );
-   fadcdata[7] = evdata.GetData( Decoder::kPulseIntegral,1,20,12,0 );
+   fFADCSpare_sbs    = evdata.GetData( Decoder::kPulseIntegral,1,20,15,0 );
+   fFADCHelicity_sbs = evdata.GetData( Decoder::kPulseIntegral,1,20,14,0 );
+   fFADCPatSync_sbs  = evdata.GetData( Decoder::kPulseIntegral,1,20,13,0 );
+   fFADCTSettle_sbs  = evdata.GetData( Decoder::kPulseIntegral,1,20,12,0 );
    UInt_t hroc = fROCinfo[kHel].roc;
    UInt_t len = evdata.GetRocLength(hroc);
    //  if (len <= 4) 
@@ -274,6 +272,11 @@ Int_t SBSScalerHelicityReader::ReadData( const THaEvData& evdata )
 	 if(fVerbosity>0) std::cout << std::dec << "[SBSScalerHelicityReader::ReadDatabase]: Numread = " << numread << std::endl;
 	 fIRing = numread;
 	 for (UInt_t i=0; i<numread; i++){
+	   UInt_t qrthel = lbuff[index+1];
+	   fRingFinalQrtHel = qrthel;
+	   fTimeStampRing[i] = lbuff[index+0];
+	   fHelicityRing[i]  = (qrthel & 0x1);
+	   fPatternRing[i]   = (qrthel & 0x10);
 	    for (UInt_t j=0; j<nchan; j++){
 	       fScalerRing[i][j]=lbuff[index+2+j];
 	    }
@@ -297,14 +300,14 @@ Int_t SBSScalerHelicityReader::ReadData( const THaEvData& evdata )
       /* std::cout <<std::hex << lbuff[0] << " " <<lbuff[1]
        *           <<std::endl;
        */
-      UInt_t fHelErrorCond   = lbuff[2];
-      UInt_t fNumEvents      = lbuff[3];
-      UInt_t fNumPatterns    = lbuff[4];
-      UInt_t fPatternPhase   = lbuff[5];
-      UInt_t fSeedValue      = lbuff[6];
-      UInt_t fReportedHel    = (fSeedValue & 0x1);
-      UInt_t fEventPolarity  = lbuff[7];
-      UInt_t fReportedQrtHel = lbuff[8];
+      fHelErrorCond   = lbuff[2];
+      fNumEvents      = lbuff[3];
+      fNumPatterns    = lbuff[4];
+      fPatternPhase   = lbuff[5];
+      fSeedValue      = lbuff[6];
+      fReportedHel    = (fSeedValue & 0x1);
+      fEventPolarity  = lbuff[7];
+      fReportedQrtHel = lbuff[8];
       //  lbuff[9] is currently empty.
       /*
 	 std::cout << std::dec << "errorcode=="<<fHelErrorCond
@@ -315,15 +318,15 @@ Int_t SBSScalerHelicityReader::ReadData( const THaEvData& evdata )
 	 <<"; polarity=="<<fEventPolarity
 	 <<std::endl;
 	 std::cout <<std::dec << "LHRS FADC data: " 
-	 << fadcdata[0] << ", HEL="
-	 << fadcdata[1] << ", QRT="
-	 << fadcdata[2] << ", MPS="
-	 << fadcdata[3] << std::endl;  
+	 << fFADCSpare    << ", HEL="
+	 << fFADCHelicity << ", QRT="
+	 << fFADCPatSync  << ", MPS="
+	 << fFADCTSettle  << std::endl;
 	 std::cout <<std::dec << "SBS FADC data: " 
-	 << fadcdata[4] << ", HEL="
-	 << fadcdata[5] << ", QRT="
-	 << fadcdata[6] << ", MPS="
-	 << fadcdata[7] << std::endl;  
+	 << fFADCSpare_sbs    << ", HEL="
+	 << fFADCHelicity_sbs << ", QRT="
+	 << fFADCPatSync_sbs  << ", MPS="
+	 << fFADCTSettle_sbs  << std::endl;
 	 */
    }
 

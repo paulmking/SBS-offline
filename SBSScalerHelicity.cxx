@@ -195,7 +195,7 @@ Int_t SBSScalerHelicity::Begin( THaRunBase* )
    TString branchInfo;
 
    int j=0;
-   const int NB = 49;
+   const int NB = 61;
    TString branchName[NB];
    branchName[0]  = Form("%s.error.code"           ,armName.Data());
    branchName[1]  = Form("%s.ring.seed"            ,armName.Data());
@@ -219,6 +219,19 @@ Int_t SBSScalerHelicity::Begin( THaRunBase* )
       j = 17 + i;
       branchName[j] = Form("%s.cumulative.Ch%d",armName.Data(),i);
    }
+
+   branchName[49] = Form("%s.hel.ErrorCode"        ,armName.Data());
+   branchName[50] = Form("%s.hel.EvtNum"           ,armName.Data());
+   branchName[51] = Form("%s.hel.PattNum"          ,armName.Data());
+   branchName[52] = Form("%s.hel.PattPhase"        ,armName.Data());
+   branchName[53] = Form("%s.hel.PatternSeed"      ,armName.Data());
+   branchName[54] = Form("%s.hel.PatternPolarity"  ,armName.Data());
+   branchName[55] = Form("%s.hel.EvtPolarity"      ,armName.Data());
+   branchName[56] = Form("%s.hel.ReportedQrtHel"   ,armName.Data());
+   branchName[57] = Form("%s.ring.FinalQrtHel"     ,armName.Data());
+   branchName[58] = Form("%s.fadc.ReportedHelicity",armName.Data());
+   branchName[59] = Form("%s.fadc.PatternSync"     ,armName.Data());
+   branchName[60] = Form("%s.fadc.TSettle"         ,armName.Data());
 
    if(!fHelScalerTree){
       // if the tree isn't created yet, create it
@@ -262,7 +275,32 @@ Int_t SBSScalerHelicity::Begin( THaRunBase* )
 	 j = 17 + i; 
 	 branchInfo = Form("%s/L",branchName[j].Data()); 
 	 fHelScalerTree->Branch(branchName[j].Data(),&fScalerCumulative[i],branchInfo.Data()); 
-      } 
+      }
+      branchInfo = Form("%s/i",branchName[49].Data());
+      fHelScalerTree->Branch(branchName[49].Data(),&fHelErrorCond,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[50].Data());
+      fHelScalerTree->Branch(branchName[50].Data(),&fNumEvents,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[51].Data());
+      fHelScalerTree->Branch(branchName[51].Data(),&fNumPatterns,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[52].Data());
+      fHelScalerTree->Branch(branchName[52].Data(),&fPatternPhase,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[53].Data());
+      fHelScalerTree->Branch(branchName[53].Data(),&fSeedValue,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[54].Data());
+      fHelScalerTree->Branch(branchName[54].Data(),&fReportedHel,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[55].Data());
+      fHelScalerTree->Branch(branchName[55].Data(),&fEventPolarity,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[56].Data());
+      fHelScalerTree->Branch(branchName[56].Data(),&fReportedQrtHel,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[57].Data());
+      fHelScalerTree->Branch(branchName[57].Data(),&fRingFinalQrtHel,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[58].Data());
+      fHelScalerTree->Branch(branchName[58].Data(),&fFADCHelicity,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[59].Data());
+      fHelScalerTree->Branch(branchName[59].Data(),&fFADCPatSync,branchInfo.Data());
+      branchInfo = Form("%s/i",branchName[60].Data());
+      fHelScalerTree->Branch(branchName[60].Data(),&fFADCTSettle,branchInfo.Data());
+
    }
 
    return 0;

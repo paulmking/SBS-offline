@@ -71,11 +71,25 @@ class SBSScalerHelicityReader {
       void Begin();
       void End();
 
+      //  These variables are the reported integrals from the FADCs
+      UInt_t fFADCPatSync;
+      UInt_t fFADCHelicity;
+      UInt_t fFADCTSettle;
+      UInt_t fFADCSpare;
+
+      //  These variables are the reported integrals from the FADCs
+      UInt_t fFADCPatSync_sbs;
+      UInt_t fFADCHelicity_sbs;
+      UInt_t fFADCTSettle_sbs;
+      UInt_t fFADCSpare_sbs;
+
+      //  These variables should be removed.
       UInt_t fPatternTir;
       UInt_t fHelicityTir;
       UInt_t fTSettleTir;
       UInt_t fTimeStampTir;
       UInt_t fOldTimeStampTir;
+
       UInt_t fIRing;
       // the ring map is defined in 
       // http://www.jlab.org/~adaq/halog/html/1011_archive/101101100943.html
@@ -85,10 +99,21 @@ class SBSScalerHelicityReader {
       UInt_t fHelicityRing[kHelRingDepth];
       UInt_t fPatternRing[kHelRingDepth];
       UInt_t fTimeStampRing[kHelRingDepth];
+      UInt_t fRingFinalQrtHel;
+
       UInt_t fT3Ring[kHelRingDepth];
       UInt_t fU3Ring[kHelRingDepth];
       UInt_t fT5Ring[kHelRingDepth];
       UInt_t fT10Ring[kHelRingDepth];
+
+      UInt_t fHelErrorCond;   //  Helicity ROC error condition
+      UInt_t fNumEvents;      //  Number of helicity windows
+      UInt_t fNumPatterns;    //  Number of patterns
+      UInt_t fPatternPhase;   //  Current pattern phase
+      UInt_t fSeedValue;      //  Seed value for current pattern
+      UInt_t fReportedHel;    //  Current reported helicity at start of pattern
+      UInt_t fEventPolarity;  //  Polarity of the current event with respect to start of pattern
+      UInt_t fReportedQrtHel; //  Current "qrthel" value:  0x10==start of pattern, 0x1==Hel+
 
       // ROC information
       // If a header is zero the index is taken to be from the start of
