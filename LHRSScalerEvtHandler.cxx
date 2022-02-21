@@ -204,7 +204,7 @@ Int_t LHRSScalerEvtHandler::Analyze(THaEvData *evdata)
   if (fDebugFile) *fDebugFile<<"\n\nLHRSScalerEvtHandler :: Debugging event type "<<dec<<evdata->GetEvType()<<endl<<endl;
 
   // local copy of data
-  // FIXME: event is ASCII, not 32-bit binary! We need to convert ASCII to 32-bit binary  
+  // NOTE: event is ASCII, not 32-bit binary! We need to convert ASCII to 32-bit binary  
   for (Int_t i=0; i<ndata; i++) rdata[i] = evdata->GetRawData(i);
 
   Int_t nskip=0;
@@ -243,6 +243,7 @@ Int_t LHRSScalerEvtHandler::Analyze(THaEvData *evdata)
     nskip = 1;
     itimeout=0;
     NScalers = scalers.size();
+    if (fDebugFile)*fDebugFile << "**** NUM SCALERS = " << NScalers << std::endl;
     for (UInt_t j=0; j<NScalers; j++) {
        // bump pointer until scaler found, and don't decode if already found for this event.
        if (scalerloc[j]->found) continue;
@@ -260,15 +261,14 @@ Int_t LHRSScalerEvtHandler::Analyze(THaEvData *evdata)
           }
        }
        found1:
-           if(p==pstop && ifound==0) break;
-            if(fDebugFile) *fDebugFile << "\n[LHRSScalerEvtHandler::Analyze]: FOUND EVENT 140!" << std::endl;
-           nskip = scalers[j]->Decode(p);
-           if (fDebugFile && nskip > 1) {
-               *fDebugFile << "\n===== Scaler # "<<j<<"     fName = "<<fName<<"   nskip = "<<nskip<<endl;
-               scalers[j]->DebugPrint(fDebugFile);
-	       // scalers[j]->DoPrint(); 
-           }
-           if (nskip > 1) goto continue1;
+	    if(p==pstop && ifound==0) break;
+             if (fDebugFile)*fDebugFile << "\n[LHRSScalerEvtHandler::Analyze]: FOUND EVENT 140!" << std::endl;
+	    nskip = scalers[j]->Decode(p);
+	    if (fDebugFile && nskip > 1) {
+		    *fDebugFile << "\n===== Scaler # "<<j<<"     fName = "<<fName<<"   nskip = "<<nskip<<endl;
+		    scalers[j]->DebugPrint(fDebugFile);
+	    }
+	    if (nskip > 1) goto continue1;
     }
     continue1:
        p = p + nskip;
@@ -840,11 +840,11 @@ void LHRSScalerEvtHandler::DefVars()
 Int_t LHRSScalerEvtHandler::ParseData(char *msg,std::string *word,UInt_t *word_int){
    // loop through the message (msg) and convert into data words 
    // - input:  a char array to parse (i.e., scaler data)  
-   // - output: number of words, std::string array (word) and int array (word_int)     
-   char data[200],subword[200];
-   sprintf(data,"");
-   sprintf(subword,"");
-
+   // - output: std::string array (word) and int array (word_int)     
+   char data[250];
+   strcpy(data,"");
+  
+   // char *pEnd;
    // std::cout << "Message to decode: " << std::endl;
    // std::cout << msg << std::endl;
 
@@ -854,30 +854,18 @@ Int_t LHRSScalerEvtHandler::ParseData(char *msg,std::string *word,UInt_t *word_i
    int j=0;
    int length = strlen(msg);
    for(int i=0;i<length;i++){
-     if(msg[i]=='\n'){
-        // now have a full word
-	word[j] = data;
-	// determine if this is the header
-	for(int k=0;k<3;k++){
-	   sprintf(subword,"%s%c",subword,data[k]);
-	}
-	myStr = subword;
-	if(myStr.compare("abc")==0){
-	   // this is the header -- convert to base 16 int (hex) 
-	   word_int[j] = std::strtoul(data,&pEnd,16);
-	}else{
-           // these are the counts -- convert to base 10 int 
-	   word_int[j] = std::strtoul(data,&pEnd,10);
-	}
-	// increment the index on the word array
-	j++;
-	// empty the constructed word 
-	sprintf(data,"");
-	sprintf(subword,"");
-     }else{
-	// not a new line, build the word  
-	sprintf(data,"%s%c",data,msg[i]);
-     }
+      if(msg[i]=='\n'){
+      	// now have a full word
+      	word[j]     = data;
+        word_int[j] = std::strtol(data,&pEnd,16);  // base 16 (hex)
+      	// increment the index on the word array
+      	j++;
+      	// empty the constructed word 
+      	strcpy(data,"");
+      }else{
+      	// not a new line, build the word  
+      	sprintf(data,"%s%c",data,msg[i]);
+      }
    }
 
    return j; // return the number of words 
@@ -889,12 +877,31 @@ Int_t LHRSScalerEvtHandler::ReadDatabase(const TDatime& date){
    prefix[1]='\0';
    fNumBCMs = 0;
 
-#ifdef HALLCPARM
-   DBRequest list[]={
-     {"NumBCMs",&fNumBCMs, kInt, 0, 1},
-     {0}
+// #ifdef HALLCPARM
+
+   DBRequest list [] = {
+      {"NumBCMs",&fNumBCMs,kInt,0,1},
+      {0}
    };
-   gHcParms->LoadParmValues((DBRequest*)&list, prefix);
+
+  TString sname = "db_LeftBCM.dat";
+  std::cout << "Trying to load database file " << sname << std::endl;
+
+  FILE *file = Podd::OpenDBFile(sname.Data(), date);
+  // FILE* file = OpenFile( date );
+   if( !file )
+      return kInitError;
+
+   Int_t err = kOK;
+
+   if(!err){
+      err = LoadDB( file, date,list,fPrefix);
+   }
+   // DBRequest list[]={
+   //    {"NumBCMs",&fNumBCMs, kInt, 0, 1},
+   //    {0}
+   // };
+   // gHcParms->LoadParmValues((DBRequest*)&list, prefix);
    std::cout << "[LHRSScalerEvtHandler::ReadDatabase]: Number of BCMs = " << fNumBCMs << std::endl;
 
    if(fNumBCMs>0) {
@@ -920,14 +927,22 @@ Int_t LHRSScalerEvtHandler::ReadDatabase(const TDatime& date){
        fBCM_SatOffset[i]=0.;
        fBCM_SatQuadratic[i]=0.;
      }
-     gHcParms->LoadParmValues((DBRequest*)&list2, prefix);
+     err = LoadDB(file,date,list2,fPrefix);
+     // gHcParms->LoadParmValues((DBRequest*)&list2, prefix);
+     string myStr;
      std::vector<string> bcm_names = Podd::vsplit(bcm_namelist);
      for(Int_t i=0;i<fNumBCMs;i++) {
-       fBCM_Name.push_back(bcm_names[i]+".scal");
-       fBCM_delta_charge[i]=0.;
+	myStr = "Left.bcm." + bcm_names[i] + ".current";
+	fBCM_Name.push_back(myStr);
+	fBCM_delta_charge[i]=0.;
+     }
+     // print what we have
+     std::cout << "LOADED FROM DATABASE: " << std::endl;
+     for(Int_t i=0;i<fNumBCMs;i++){
+	std::cout << Form("%s: offset = %.3lf Hz, gain = %.3lf Hz/uA",fBCM_Name[i].c_str(),fBCM_Offset[i],fBCM_Gain[i]) << std::endl;
      }
    }
-#endif
+// #endif
 
    fTotalTime=0.;
    fPrevTotalTime=0.;
